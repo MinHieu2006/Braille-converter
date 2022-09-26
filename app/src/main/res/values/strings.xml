@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Braille converter</string>
+    <string name="_9_41_string">9:41</string>
+    <string name="roadshow_string">RoadShow</string>
+    <string name="what_is_inside_cats_mind_string">What is inside cats mind</string>
+    <string name="_0_00_string">0:00</string>
+    <string name="__43_20_string">-43:20</string>
+    <string name="cat_experts_dive_into_the_mind_of_the_feline_to_reveal_the_true_capabilities_of_the_pouncing_pet_in_this_captivating_and_cuddly_documentary__string">Cat experts dive into the mind of the feline to reveal the true capabilities of the pouncing pet in this captivating and cuddly documentary.</string>
 </resources>
