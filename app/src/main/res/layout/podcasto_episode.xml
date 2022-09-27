@@ -1,20 +1,5 @@
 <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent" android:layout_height="wrap_content" >
-	<!-- 
-	/*
-	 *	This content is generated from the API File Info.
-	 *	(Alt+Shift+Ctrl+I).
-	 *
-	 *	@desc 		
-	 *	@file 		podcasto_episode
-	 *	@date 		Monday 26th of September 2022 12:04:55 PM
-	 *	@title 		FInal-NormalMode
-	 *	@author 	
-	 *	@keywords 	
-	 *	@generator 	Export Kit v1.3.figma
-	 *
-	 */
-	-->
 	<ScrollView android:id="@+id/podcasto_episode" 
 		android:layout_width="wrap_content" 
 		android:layout_height="match_parent" >
@@ -27,7 +12,7 @@
 				android:background="@drawable/_bg__podcasto_episode_shape"
 				 android:layout_marginStart="0dp"
 				android:layout_marginTop="0dp"
-				android:layout_width="390dp"
+				android:layout_width="410dp"
 				android:layout_height="844dp" />
 
 			<ImageView android:id="@+id/vector_1"
@@ -153,6 +138,7 @@
 
 			</RelativeLayout>
 
+
 			<View   android:id="@+id/rectangle_3"
 				android:background="@drawable/rectangle_3_shape"
 				 android:layout_marginStart="28dp"
@@ -206,12 +192,12 @@
 				android:textSize="18sp" />
 
 
-			<RelativeLayout android:id="@+id/group_11"
-				android:layout_marginTop="504dp"
-				android:layout_marginStart="45dp"
+			<RelativeLayout
+				android:id="@+id/group_11"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				>
+				android:layout_marginStart="45dp"
+				android:layout_marginTop="504dp">
 
 				<TextView
 					android:id="@+id/_0_00"
@@ -233,19 +219,17 @@
 					android:textColor="@color/_0_00_color"
 					android:textSize="18sp" />
 
-				<View   android:id="@+id/line_1"
-					android:background="@drawable/line_1_shape"
-					 android:layout_marginStart="0dp"
-					android:layout_marginTop="11dp"
-					android:layout_width="300dp"
-					android:layout_height="4dp" />
 
-				<View   android:id="@+id/ellipse_7"
-					android:background="@drawable/ellipse_7_shape"
-					 android:layout_marginStart="51dp"
-					android:layout_marginTop="0dp"
-					android:layout_width="26dp"
-					android:layout_height="26dp" />
+				<SeekBar
+					android:id="@+id/seekBar"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:maxHeight="3dp"
+					android:minHeight="3dp"
+					android:progress="50"
+					android:progressDrawable="@drawable/seek_bar_ruler"
+					android:thumb="@drawable/seek_bar_slider"
+					/>
 
 			</RelativeLayout>
 
