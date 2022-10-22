@@ -3,8 +3,13 @@ package com.example.brailleconverter;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.pdf.PdfDocument;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.util.Log;
@@ -23,6 +28,14 @@ import net.gotev.speech.*;
 import net.gotev.speech.ui.SpeechProgressView;
 
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import androidx.annotation.NonNull;
@@ -33,6 +46,7 @@ import androidx.core.content.ContextCompat;
 
 public class Record extends AppCompatActivity implements SpeechDelegate {
 
+    SQLiteDatabase db  ;
     boolean isSpeak = false;
     private final int PERMISSIONS_REQUEST = 1;
     private static final String LOG_TAG = "a";
@@ -67,7 +81,7 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
-
+        call_database();
         Speech.init(this, getPackageName(), mTttsInitListener);
 
         linearLayout = findViewById(R.id.linearLayout);
@@ -100,6 +114,66 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
         } catch (GoogleVoiceTypingDisabledException exc) {
             showEnableGoogleVoiceTyping();
         }
+
+        // tiền đề xử lí database
+//        call_database();
+
+    }
+    private void copyAssets() {
+        AssetManager assetManager = getAssets();
+        String[] files = null;
+        try {
+            files = assetManager.list("");
+        } catch (IOException e) {
+            Log.e("tag", "Failed to get asset file list.", e);
+        }
+        for (String filename : files) {
+            InputStream in = null;
+            OutputStream out = null;
+            try {
+                in = assetManager.open(filename);
+
+                String outDir =  Record.this.getApplicationInfo().dataDir + "/databases/";
+
+                File outFile = new File(outDir, filename);
+
+                out = new FileOutputStream(outFile);
+                copyFile(in, out);
+                in.close();
+                in = null;
+                out.flush();
+                out.close();
+                out = null;
+            } catch (IOException e) {
+                Log.e("tag", "Failed to copy asset file: " + filename, e);
+            }
+        }
+    }
+
+    private void copyFile(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            out.write(buffer, 0, read);
+        }
+    }
+    public void call_database(){
+        copyAssets();
+        DataBase dt = new DataBase(this);
+        SQLiteDatabase database ;
+        database = DataBase.initDatabase(this , "Data_Base_Vietnamese.db");
+        String sql = "SELECT character  FROM braille WHERE character = "  + "\"" + "a" + "\"" + ";";
+        Cursor cursor = database.rawQuery("SELECT character  FROM braille WHERE value = "  + "\"" + "236" + "\"" + ";" , null);
+        if(cursor.moveToFirst()){
+            do {
+                String query = cursor.getString(0);
+                Log.d("Data" , query);
+            }while (cursor.moveToNext());
+        }
+    }
+    public void initData(){
+        db = openOrCreateDatabase("Data_Base_Vietnamese.db" , MODE_PRIVATE , null);
+
     }
 
     @Override
@@ -328,7 +402,7 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
             title = title + partial + " ";
         }
         title = title.toUpperCase();
-        if(isSpeak) text.setText(title);
+        text.setText(title);
         if(!isSpeak && title.toString().contains("OK CON DÊ")){
             isSpeak = true;
         }
