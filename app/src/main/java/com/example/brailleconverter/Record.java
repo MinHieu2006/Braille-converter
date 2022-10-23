@@ -15,6 +15,7 @@ import android.speech.tts.Voice;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,6 +39,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
+import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -45,9 +47,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class Record extends AppCompatActivity implements SpeechDelegate {
-
     SQLiteDatabase db  ;
-    boolean isSpeak = false;
     private final int PERMISSIONS_REQUEST = 1;
     private static final String LOG_TAG = "a";
 
@@ -76,6 +76,40 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
             }
         }
     };
+    boolean islisten = false;
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
+        if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
+        Speech.getInstance().say("đang lắng nghe", new TextToSpeechCallback() {
+            @Override
+            public void onStart() {
+            }
+
+            @Override
+            public void onCompleted() {
+                try {
+                    if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
+                    if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
+                    Speech.getInstance().stopTextToSpeech();
+                    Speech.getInstance().startListening(progress, Record.this);
+
+                } catch (SpeechRecognitionNotAvailable exc) {
+                    showSpeechNotSupportedDialog();
+
+                } catch (GoogleVoiceTypingDisabledException exc) {
+                    showEnableGoogleVoiceTyping();
+                }
+            }
+
+            @Override
+            public void onError() {
+                Toast.makeText(Record.this, "TTS onError", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        return super.onTouchEvent(event);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +124,7 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
         button.setOnClickListener(view -> onButtonClick());
 
         speak = findViewById(R.id.speak);
-        speak.setOnClickListener(view -> onSpeakClick());
+
 
         text = findViewById(R.id.text);
         textToSpeech = findViewById(R.id.textToSpeech);
@@ -104,19 +138,7 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
                 ContextCompat.getColor(this, android.R.color.holo_red_dark)
         };
         progress.setColors(colors);
-        try {
-            Speech.getInstance().stopTextToSpeech();
-            Speech.getInstance().startListening(progress, Record.this);
 
-        } catch (SpeechRecognitionNotAvailable exc) {
-            showSpeechNotSupportedDialog();
-
-        } catch (GoogleVoiceTypingDisabledException exc) {
-            showEnableGoogleVoiceTyping();
-        }
-
-        // tiền đề xử lí database
-//        call_database();
 
     }
     private void copyAssets() {
@@ -170,10 +192,6 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
                 Log.d("Data" , query);
             }while (cursor.moveToNext());
         }
-    }
-    public void initData(){
-        db = openOrCreateDatabase("Data_Base_Vietnamese.db" , MODE_PRIVATE , null);
-
     }
 
     @Override
@@ -296,15 +314,7 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
     }
 
     private void onButtonClick() {
-        if (Speech.getInstance().isListening()) {
-            Speech.getInstance().stopListening();
-        } else {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                onRecordAudioPermissionGranted();
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSIONS_REQUEST);
-            }
-        }
+
     }
 
     @Override
@@ -328,7 +338,7 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
 
         try {
             Speech.getInstance().stopTextToSpeech();
-            Speech.getInstance().startListening(progress, Record.this);
+            Speech.getInstance().startListening(progress, Record.this );
 
         } catch (SpeechRecognitionNotAvailable exc) {
             showSpeechNotSupportedDialog();
@@ -338,29 +348,6 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
         }
     }
 
-    private void onSpeakClick() {
-        if (textToSpeech.getText().toString().trim().isEmpty()) {
-            Toast.makeText(this, R.string.input_something, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        Speech.getInstance().say(textToSpeech.getText().toString().trim(), new TextToSpeechCallback() {
-            @Override
-            public void onStart() {
-                Toast.makeText(Record.this, "TTS onStart", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onCompleted() {
-                Toast.makeText(Record.this, "TTS onCompleted", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onError() {
-                Toast.makeText(Record.this, "TTS onError", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
     @Override
     public void onStartOfSpeech() {
@@ -377,21 +364,9 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
         button.setVisibility(View.VISIBLE);
         linearLayout.setVisibility(View.GONE);
 
-        if (result.isEmpty()) {
-            Speech.getInstance().say(getString(R.string.repeat));
-
-        } else {
-            Speech.getInstance().say(result);
-        }
-    }
-    void resume(){
-        Speech.getInstance().stopListening();
-        try {
-            Speech.getInstance().startListening(progress, Record.this);
-        } catch (Exception e){
-
-        }
-
+        result = result.toUpperCase();
+        Matching_Request match = new Matching_Request();
+        Toast.makeText(Record.this, Integer.toString(match.Matching(result)) , Toast.LENGTH_SHORT).show();
     }
     @Override
     public void onSpeechPartialResults(List<String> results) {
@@ -403,12 +378,6 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
         }
         title = title.toUpperCase();
         text.setText(title);
-        if(!isSpeak && title.toString().contains("OK CON DÊ")){
-            isSpeak = true;
-        }
-        Log.d("Message" , title);
-        Log.d("isSpeak" , (isSpeak ? "true" : "false"));
-        //if(isSpeak) isSpeak = false;
     }
 
     private void showSpeechNotSupportedDialog() {
