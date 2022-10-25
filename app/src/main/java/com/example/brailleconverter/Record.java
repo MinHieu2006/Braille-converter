@@ -1,15 +1,22 @@
 package com.example.brailleconverter;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.pdf.PdfDocument;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.util.Log;
@@ -39,14 +46,24 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.LongDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.itextpdf.xmp.impl.Utils;
+
+import org.apache.pdfbox.contentstream.operator.OperatorName;
+
 public class Record extends AppCompatActivity implements SpeechDelegate {
+
     SQLiteDatabase db  ;
     private final int PERMISSIONS_REQUEST = 1;
     private static final String LOG_TAG = "a";
@@ -76,7 +93,6 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
             }
         }
     };
-    boolean islisten = false;
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
@@ -115,6 +131,9 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
+
+
+
         call_database();
         Speech.init(this, getPackageName(), mTttsInitListener);
 
@@ -415,5 +434,103 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
                 })
                 .show();
     }
+    ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent data = result.getData();
+                        Uri uri = data.getData();
+                        String link = data.getData().getPath();
+                        Log.d("AAAAAAAA" , link);
+                        ReadPDF readPDF = new ReadPDF();
+                        readPDF.Read_From_Storage(link);
+                        if (Environment.isExternalStorageManager()){
+                        }else {
+                            Intent intent = new Intent();
+                            intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                            Uri uri2 = Uri.fromParts("package", Record.this.getPackageName(), null);
+                            intent.setData(uri2);
+                            startActivity(intent);
+                        }
+                    }
+                }
+            });
+    public void openFile(View view){
+        Intent chooseFile = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        //chooseFile.setType("application/pdf");
+        chooseFile.setType("*/*");
+        chooseFile = Intent.createChooser(chooseFile, "Choose a file");
+        someActivityResultLauncher.launch(chooseFile);
+    }
+    public static String getPath(final Context context, final Uri uri) {
 
+        final boolean isKitKat = Build.VERSION.SDK_INT >=
+                Build.VERSION_CODES.KITKAT;
+        Log.i("URI",uri+"");
+        String result = uri+"";
+        // DocumentProvider
+        //  if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+        if (isKitKat && (result.contains("media.documents"))) {
+
+            String[] ary = result.split("/");
+            int length = ary.length;
+            String imgary = ary[length-1];
+            final String[] dat = imgary.split("%3A");
+
+            final String docId = dat[1];
+            final String type = dat[0];
+
+            Uri contentUri = null;
+            if ("image".equals(type)) {
+                contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            } else if ("video".equals(type)) {
+
+            } else if ("audio".equals(type)) {
+            }
+
+            final String selection = "_id=?";
+            final String[] selectionArgs = new String[] {
+                    dat[1]
+            };
+
+            return getDataColumn(context, contentUri, selection, selectionArgs);
+        }
+        else
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
+            return getDataColumn(context, uri, null, null);
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return result;
+    }
+
+
+    public static String getDataColumn(Context context, Uri uri, String selection,
+                                       String[] selectionArgs) {
+
+        Cursor cursor = null;
+        final String column = "_data";
+        final String[] projection = {
+                column
+        };
+
+        try {
+            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                final int column_index = cursor.getColumnIndexOrThrow(column);
+                return cursor.getString(column_index);
+            }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return null;
+    }
 }
