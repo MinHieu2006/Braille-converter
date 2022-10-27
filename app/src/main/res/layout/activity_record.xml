@@ -45,8 +45,8 @@
         android:layout_marginLeft="200dp"
         android:layout_marginTop="200dp"
         android:background="@android:color/transparent"
-        android:text="Test"
-        android:onClick="openFile"/>
+        android:onClick="openFile"
+        android:text="Test" />
 
     <Button
         android:id="@+id/speak"

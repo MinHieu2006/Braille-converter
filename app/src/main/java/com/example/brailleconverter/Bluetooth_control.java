@@ -73,9 +73,29 @@ public class Bluetooth_control extends Activity {
         btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendSignal(txt_send.getText().toString());
+                sendSignal(convert_to_braille(txt_send.getText().toString()));
             }
         });
+    }
+    public int setbit(int msk,int i) {
+        return (msk | (1 << (i-1)));
+    }
+
+    public String convert_to_braille(String txt){
+        String ans = "";
+        Translate t = new Translate();
+        String tmp = t.translate(this , txt);
+        int res = 0;
+        for(int i=0;i<tmp.length();i++){
+            if(tmp.charAt(i)!='-' && tmp.charAt(i)!=' '){
+                res = setbit(res , 7 - (tmp.charAt(i) -'0'));
+            } else{
+                ans = ans + (char)(res + '0');
+                res = 0;
+            }
+        }
+        if(res != 0 ) ans = ans + (char)(res + '0');
+        return ans;
     }
 //    private void pairedDevicesList () {
 //        pairedDevices = myBluetooth.getBondedDevices();
