@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage"/>
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30"
@@ -23,7 +24,10 @@
         android:maxSdkVersion="30"
         android:required="false" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -35,13 +39,13 @@
         android:theme="@style/Theme.Design.NoActionBar"
         tools:targetApi="31">
         <activity
-            android:name=".Bluetooth_control"
+            android:name=".Record"
             android:exported="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true" />
         <activity
-            android:name=".Record"
+            android:name=".Bluetooth_control"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

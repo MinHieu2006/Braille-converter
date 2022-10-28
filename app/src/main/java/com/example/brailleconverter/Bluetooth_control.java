@@ -1,7 +1,9 @@
 package com.example.brailleconverter;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
@@ -50,7 +52,7 @@ public class Bluetooth_control extends Activity {
         btn4 = findViewById(R.id.button4);
         btn2 = findViewById(R.id.button2);
         txt_send = findViewById(R.id.t);
-
+        requestBlePermissions(this,1);
         myBluetooth = BluetoothAdapter.getDefaultAdapter();
         new Bluetooth_control.ConnectBT().execute();
         if ( myBluetooth==null ) {
@@ -178,5 +180,21 @@ public class Bluetooth_control extends Activity {
             progress.dismiss();
         }
     }
+    private static final String[] BLE_PERMISSIONS = new String[]{
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+    };
 
+    private static final String[] ANDROID_12_BLE_PERMISSIONS = new String[]{
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+    };
+
+    public static void requestBlePermissions(Activity activity, int requestCode) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            ActivityCompat.requestPermissions(activity, ANDROID_12_BLE_PERMISSIONS, requestCode);
+        else
+            ActivityCompat.requestPermissions(activity, BLE_PERMISSIONS, requestCode);
+    }
 }
