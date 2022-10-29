@@ -112,12 +112,7 @@ public class Record extends AppCompatActivity implements SpeechDelegate {
                 ContextCompat.getColor(this, android.R.color.holo_red_dark)
         };
         progress.setColors(colors);
-        Newspaper n = new Newspaper();
-        try {
-            n.get_data();
-        } catch (IOException e){
-            Log.e("er" , e.toString());
-        }
+
     }
     @Override
     public boolean onTouchEvent(MotionEvent event) {

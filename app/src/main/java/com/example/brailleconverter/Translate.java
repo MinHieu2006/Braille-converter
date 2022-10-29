@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 public class Translate {
+    Boolean isNum = false;
     public String translate(Activity context , String txt){
         String result = "";
         SQLiteDatabase database ;
@@ -14,8 +15,22 @@ public class Translate {
         for(char i : txt.toCharArray()){
             Cursor cursor = database.rawQuery("SELECT value  FROM braille WHERE character = "  + "\"" + i + "\"" + ";" , null);
             cursor.moveToFirst();
-            result = result + cursor.getString(0) + " ";
+            String t = cursor.getString(0);
+            result = result + Process(cursor.getString(0)) + " ";
         }
         return result;
+    }
+    private String Process(String t){
+        if(t.charAt(0) >= '0' && t.charAt(0) <= '9'){
+            if(isNum){
+                return t;
+            } else{
+                isNum = true;
+                return "3456 " + t;
+            }
+        } else{
+            isNum = false;
+        }
+        return "";
     }
 }

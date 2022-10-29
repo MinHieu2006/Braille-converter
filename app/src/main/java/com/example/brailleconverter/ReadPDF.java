@@ -40,7 +40,7 @@ public class ReadPDF extends AppCompatActivity {
     }
 
     public void Read_From_Assert(String url){
-
+        Uri uri = Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.video_background);
     }
 
 

@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         VideoView videoview = (VideoView) findViewById(R.id.videoView);
+        new Newspaper().execute();
         Uri uri = Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.video_background);
         videoview.setVideoURI(uri);
         videoview.start();
