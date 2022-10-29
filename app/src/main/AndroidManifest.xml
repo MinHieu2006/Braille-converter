@@ -42,10 +42,10 @@
             android:name=".Record"
             android:exported="true" />
         <activity
-            android:name=".MainActivity"
+            android:name=".Bluetooth_control"
             android:exported="true" />
         <activity
-            android:name=".Bluetooth_control"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -47,7 +47,7 @@ public class Matching_Request {
 
     public int Matching(String s){
         int result = 0;
-        String a[] = {"TĂNG TỐC ĐỘ" ,"GIẢM TỐC ĐỘ" , "DỊCH BÁO" , "DỊCH TÀI LIỆU" , "HỌC CHỮ CÁI" , "QUAY LẠI"};
+        String a[] = {"TĂNG TỐC ĐỘ" ,"GIẢM TỐC ĐỘ" , "DỊCH BÁO" , "DỊCH TÀI LIỆU" , "HỌC CHỮ CÁI" , "GIỚI THIỆU" , "DỪNG LẠI"};
         double b[] = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0};
         double maxx = 0.0;
         for(int i =0 ;i<a.length;i++){
