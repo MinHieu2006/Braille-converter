@@ -13,31 +13,30 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Newspaper extends AsyncTask<Void, Void, List<Post>>{
-    // Number of post
-    public int number = 10;
-    public List<Post> list = new ArrayList<>();
+public class ReadPostFromNewsPaper extends AsyncTask<Void, Void, List<String>>{
+    public List<String> list = new ArrayList<>();
+    public String link;
+    public ReadPostFromNewsPaper(String link){
+        this.link = link;
+    }
     @Override
-    protected List<Post> doInBackground(Void... params) {
-        String url = "https://vnexpress.net/";
+    protected List<String> doInBackground(Void... params) {
         Document document;
         try {
-            document = Jsoup.connect(url).get();
-            Elements paragraphs = document.select("p[class='description']");
+            document = Jsoup.connect(link).get();
+            Elements paragraphs = document.select("p[class='Normal']");
 
             Element firstParagraph = paragraphs.first();
             Element lastParagraph = paragraphs.last();
             Element p;
             int i=1;
             p=firstParagraph;
-            //Log.i("TEXT" , "*  " +p.text());
-            Post tmp = new Post(p.select("a").attr("href") , p.select("a").attr("title"));
+            Log.i("TEXT" , "*  " +p.text());
             while (p!=lastParagraph){
-                if(list.size() >= number) break;
                 p=paragraphs.get(i);
-                Post post = new Post( p.select("a").attr("href") , p.select("a").attr("title"));
-                list.add(post);
                 i++;
+                Log.i("text " , p.select("p").text());
+                list.add(p.select("p").text());
             }
             int n = list.size();
 
@@ -50,11 +49,11 @@ public class Newspaper extends AsyncTask<Void, Void, List<Post>>{
 
 
     @Override
-    protected void onPostExecute(List<Post> result) {
+    protected void onPostExecute(List<String> result) {
         //if you had a ui element, you could display the title
         data();
     }
-    public List<Post> data(){
+    public List<String> data(){
         return list;
     }
 }

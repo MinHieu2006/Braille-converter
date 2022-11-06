@@ -2,7 +2,7 @@ package com.example.brailleconverter;
 
 import android.util.Log;
 
-public class Matching_Request {
+public class Matching_Number {
     public static double similarity(String s1, String s2) {
         String longer = s1, shorter = s2;
         if (s1.length() < s2.length()) { // longer should always have greater length
@@ -50,14 +50,23 @@ public class Matching_Request {
     public int Matching(String s){
         try{
             int result = 0;
-            String a[] = {"TĂNG TỐC ĐỘ" ,"GIẢM TỐC ĐỘ" , "ĐỌC BÁO" , "DỊCH TÀI LIỆU" , "HỌC CHỮ CÁI" , "GIỚI THIỆU" , "DỪNG LẠI"};
-            double b[] = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0};
+            String a[] = {"1" , "2" , "3" , "4" , "5" , "6" , "7" , "8" , "9" , "10"};
+            String c[] = {"MỘT" , "HAI" , "BA" , "BỐN" , "NĂM" ,"SÁU","BẢY","TÁM","CHÍN","MƯỜI"};
+            double b[] = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0 ,0.0 , 0.0 , 0.0};
             double maxx = 0.0;
             for(int i =0 ;i<a.length;i++){
                 b[i] =  similarity(s, a[i]);
                 if(maxx < b[i]) {
                     maxx = b[i];
                     result = i+1;
+                }
+            }
+            for(int i =0 ;i<c.length;i++){
+                double tmp = similarity(s, c[i]);
+                if(tmp > b[i]) b[i] = tmp;
+                if(maxx < b[i]) {
+                    maxx = b[i];
+                    result = i;
                 }
             }
             if(maxx > 0.5) return result; else return 0;

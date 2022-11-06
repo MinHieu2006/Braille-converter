@@ -51,14 +51,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
     // Zone for variable
+    int count = 0;
+    boolean ok = false;
+    public List<String> listData = new ArrayList<String>();
+    public boolean isClickPost = false;
+    public int trang_thai = 0 , vitri = -1;
     public int Speed = 2;
     private final int PERMISSIONS_REQUEST = 1;
     private static final String LOG_TAG = "a";
@@ -80,29 +87,30 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         VideoView videoview = (VideoView) findViewById(R.id.videoView);
-        new Newspaper().execute();
         Uri uri = Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.video_background);
         videoview.setVideoURI(uri);
         videoview.start();
         videoview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Touch_Screen();
+                analyst_querry("ĐỌC BÁO");
             }
         });
-        copyAssets();
         Speech.init(this, getPackageName(), mTttsInitListener);
-        requestBlePermissions(this,1);
-        myBluetooth = BluetoothAdapter.getDefaultAdapter();
-        new MainActivity.ConnectBT().execute();
-        if ( myBluetooth==null ) {
-            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
-            finish();
-        }
-        else if ( !myBluetooth.isEnabled() ) {
-            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnBTon, 1);
-        }
+        copyAssets();
+
+//        requestBlePermissions(this,1);
+//        myBluetooth = BluetoothAdapter.getDefaultAdapter();
+//        new MainActivity.ConnectBT().execute();
+//        if ( myBluetooth==null ) {
+//            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
+//            finish();
+//        }
+//        else if ( !myBluetooth.isEnabled() ) {
+//            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(turnBTon, 1);
+//        }
+
     }
     // Zone for T2S and S2T
     private TextToSpeech.OnInitListener mTttsInitListener = new TextToSpeech.OnInitListener() {
@@ -268,60 +276,70 @@ public class MainActivity extends AppCompatActivity {
     }
     // END Zone for T2S and S2T
     public void Touch_Screen(){
-        if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
-        if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
-        Speech.getInstance().say("đang lắng nghe", new TextToSpeechCallback() {
-            @Override
-            public void onStart() {
-            }
+        if(trang_thai == 0){
+            if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
+            if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
+            Speech.getInstance().say("đang lắng nghe", new TextToSpeechCallback() {
+                @Override
+                public void onStart() {
+                }
 
-            @Override
-            public void onCompleted() {
-                try {
-                    // you must have android.permission.RECORD_AUDIO granted at this point
-                    Speech.getInstance().startListening(new SpeechDelegate() {
-                        @Override
-                        public void onStartOfSpeech() {
-                            Log.i("speech", "speech recognition is now active");
-                        }
-
-                        @Override
-                        public void onSpeechRmsChanged(float value) {
-                            //Log.d("speech", "rms is now: " + value);
-                        }
-
-                        @Override
-                        public void onSpeechPartialResults(List<String> results) {
-                            StringBuilder str = new StringBuilder();
-                            for (String res : results) {
-                                str.append(res).append(" ");
+                @Override
+                public void onCompleted() {
+                    try {
+                        // you must have android.permission.RECORD_AUDIO granted at this point
+                        Speech.getInstance().startListening(new SpeechDelegate() {
+                            @Override
+                            public void onStartOfSpeech() {
+                                Log.i("speech", "speech recognition is now active");
                             }
 
-                            Log.i("speech", "partial result: " + str.toString().trim());
-                        }
+                            @Override
+                            public void onSpeechRmsChanged(float value) {
+                                //Log.d("speech", "rms is now: " + value);
+                            }
 
-                        @Override
-                        public void onSpeechResult(String result) {
-                            Log.i("speech", "result: " + result);
-                            result = result.toUpperCase();
-                            Matching_Request match = new Matching_Request();
-                            result = result.toUpperCase();
-                            Log.i("ans" , Integer.toString(match.Matching(result)));
-                        }
-                    });
+                            @Override
+                            public void onSpeechPartialResults(List<String> results) {
+                                StringBuilder str = new StringBuilder();
+                                for (String res : results) {
+                                    str.append(res).append(" ");
+                                }
 
-                } catch (SpeechRecognitionNotAvailable exc) {
-                    Log.e("speech", "Speech recognition is not available on this device!");
-                } catch (GoogleVoiceTypingDisabledException exc) {
-                    showEnableGoogleVoiceTyping();
+                                Log.i("speech", "partial result: " + str.toString().trim());
+                            }
+
+                            @Override
+                            public void onSpeechResult(String result) {
+                                Log.i("speech", "result: " + result);
+
+                                try {
+                                    analyst_querry(result);
+                                } catch (Exception e){
+                                    Log.e("Er" , e.toString());
+                                }
+
+
+                            }
+                        });
+
+                    } catch (SpeechRecognitionNotAvailable exc) {
+                        Log.e("speech", "Speech recognition is not available on this device!");
+                    } catch (GoogleVoiceTypingDisabledException exc) {
+                        showEnableGoogleVoiceTyping();
+                    }
                 }
-            }
 
-            @Override
-            public void onError() {
-                Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onError() {
+                    Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        else if(trang_thai == 2){
+            isClickPost = true;
+        }
+
     }
 
     ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
@@ -527,26 +545,162 @@ public class MainActivity extends AppCompatActivity {
         });
         return Integer.toString(Speed);
     }
+    public void Read_newspaper_tts(List<Post> tmp){
+
+    }
+    public void Read_newspaper(){
+        ok = false;
+        isClickPost = false;
+        List<Post> tmp = new ArrayList<Post>();
+        try{
+            Newspaper newspaper = new Newspaper();
+            tmp = newspaper.execute().get();
+            for(Post i: tmp){
+                Log.i("Main " , i.url);
+                Log.i("Main " , i.title);
+            }
+        } catch (Exception e){
+            e.toString();
+        }
+        count = 0;
+        for(Post i : tmp){
+            Speech.getInstance().say(i.title, new TextToSpeechCallback() {
+                @Override
+                public void onStart() {
+                }
+
+                @Override
+                public void onCompleted() {
+
+                }
+
+                @Override
+                public void onError() {
+                    Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
+                }
+            });
+            try{
+                Thread.sleep(10000);
+            }catch (Exception e){
+                e.toString();
+            }
+        }
+
+        try{
+            List<Post> hoan = tmp;
+            if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
+            if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
+            Speech.getInstance().say("Bạn muốn đọc bài báo nào", new TextToSpeechCallback() {
+                @Override
+                public void onStart() {
+                }
+
+                @Override
+                public void onCompleted() {
+                    try {
+                        // you must have android.permission.RECORD_AUDIO granted at this point
+                        Speech.getInstance().startListening(new SpeechDelegate() {
+                            @Override
+                            public void onStartOfSpeech() {
+                                Log.i("speech", "speech recognition is now active");
+                            }
+
+                            @Override
+                            public void onSpeechRmsChanged(float value) {
+                                //Log.d("speech", "rms is now: " + value);
+                            }
+
+                            @Override
+                            public void onSpeechPartialResults(List<String> results) {
+                                StringBuilder str = new StringBuilder();
+                                for (String res : results) {
+                                    str.append(res).append(" ");
+                                }
+
+                                Log.i("speech", "partial result: " + str.toString().trim());
+                            }
+
+                            @Override
+                            public void onSpeechResult(String result) {
+                                Log.i("speech", "result: " + result);
+
+                                try {
+                                    Matching_Number matching_number = new Matching_Number();
+                                    int num = matching_number.Matching(result);
+                                    if(num!=0){
+                                        listData.clear();
+                                        ReadPostFromNewsPaper readPostFromNewsPaper = new ReadPostFromNewsPaper(hoan.get(num).url);
+                                        try{
+                                            listData = readPostFromNewsPaper.execute().get();
+                                            int t = 100;
+                                            Log.i("ioioio" , listData.get(1));
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        } catch (ExecutionException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                } catch (Exception e){
+                                    Log.e("Er" , e.toString());
+                                }
+
+
+                            }
+                        });
+
+                    } catch (SpeechRecognitionNotAvailable exc) {
+                        Log.e("speech", "Speech recognition is not available on this device!");
+                    } catch (GoogleVoiceTypingDisabledException exc) {
+                        showEnableGoogleVoiceTyping();
+                    }
+                }
+
+                @Override
+                public void onError() {
+                    Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e){
+            e.toString();
+        }
+    }
     public void analyst_querry(String s){
-        Matching_Request matching_request = new Matching_Request();
-        int num = matching_request.Matching(s);
-        switch (num){
-            case 1:
-                sendSignal(change_speed(true));
-                break;
-            case 2:
-                sendSignal(change_speed(false));
-                break;
-            case 3:
-                Newspaper n = new Newspaper();
-                break;
-            case 4:
-                ReadPDF read = new ReadPDF();
-                break;
-            case 5:
-                break;
-            case 6:
-                break;
+        try{
+            Matching_Request matching_request = new Matching_Request();
+            s = s.toUpperCase();
+            int num = matching_request.Matching(s);
+            Log.e("num" , Integer.toString(num));
+            switch (num){
+                case 0:
+                    break;
+                case 1:
+                    sendSignal(change_speed(true));
+                    break;
+                case 2:
+                    sendSignal(change_speed(false));
+                    break;
+                case 3:
+                    Read_newspaper();
+                    break;
+                case 4:
+                    ReadPDF read = new ReadPDF();
+                    break;
+                case 5:
+                    break;
+                case 6:
+                    break;
+                case 7:
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e){
+            Log.e("er" , e.toString());
+        }
+
+    }
+    void before_go_signal(){
+        for(String t:listData){
         }
     }
 }
