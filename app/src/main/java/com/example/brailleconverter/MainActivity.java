@@ -98,20 +98,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         Speech.init(this, getPackageName(), mTttsInitListener);
-        int t = 12;
         copyAssets();
         Read_newspaper_tts();
-//        requestBlePermissions(this,1);
-//        myBluetooth = BluetoothAdapter.getDefaultAdapter();
-//        new MainActivity.ConnectBT().execute();
-//        if ( myBluetooth==null ) {
-//            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
-//            finish();
-//        }
-//        else if ( !myBluetooth.isEnabled() ) {
-//            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//            startActivityForResult(turnBTon, 1);
-//        }
+        requestBlePermissions(this,1);
+        myBluetooth = BluetoothAdapter.getDefaultAdapter();
+        new MainActivity.ConnectBT().execute();
+        if ( myBluetooth==null ) {
+            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
+            finish();
+        }
+        else if ( !myBluetooth.isEnabled() ) {
+            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(turnBTon, 1);
+        }
 
     }
     // Zone for T2S and S2T
