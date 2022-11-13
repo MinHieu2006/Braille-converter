@@ -100,17 +100,17 @@ public class MainActivity extends AppCompatActivity {
         Speech.init(this, getPackageName(), mTttsInitListener);
         copyAssets();
         Read_newspaper_tts();
-//        requestBlePermissions(this,1);
-//        myBluetooth = BluetoothAdapter.getDefaultAdapter();
-//        new MainActivity.ConnectBT().execute();
-//        if ( myBluetooth==null ) {
-//            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
-//            finish();
-//        }
-//        else if ( !myBluetooth.isEnabled() ) {
-//            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//            startActivityForResult(turnBTon, 1);
-//        }
+        requestBlePermissions(this,1);
+        myBluetooth = BluetoothAdapter.getDefaultAdapter();
+        new MainActivity.ConnectBT().execute();
+        if ( myBluetooth==null ) {
+            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
+            finish();
+        }
+        else if ( !myBluetooth.isEnabled() ) {
+            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(turnBTon, 1);
+        }
 
     }
     // Zone for T2S and S2T
@@ -357,6 +357,11 @@ public class MainActivity extends AppCompatActivity {
                         listData = readPDF.Read_From_Storage(link);
                         for(String txt:listData){
                             before_go_signal(txt);
+                            try{
+                                Thread.sleep(10000);
+                            }catch (Exception e){
+                                e.toString();
+                            }
                         }
                         if (Environment.isExternalStorageManager()){
                         }else {
@@ -673,6 +678,11 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 3:
                     Speech.getInstance().say("Đã rõ");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e){
+                        e.toString();
+                    }
                     vitri = 0;
                     Read_newspaper();
                     if(vitri!=0){
@@ -686,6 +696,12 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 4:
                     Speech.getInstance().say("Đã rõ");
+                    Speech.getInstance().say("Đã rõ");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e){
+                        e.toString();
+                    }
                     openFile();
                     break;
                 case 5:
