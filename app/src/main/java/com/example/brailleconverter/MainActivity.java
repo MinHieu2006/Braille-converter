@@ -100,17 +100,17 @@ public class MainActivity extends AppCompatActivity {
         Speech.init(this, getPackageName(), mTttsInitListener);
         copyAssets();
         Read_newspaper_tts();
-        requestBlePermissions(this,1);
-        myBluetooth = BluetoothAdapter.getDefaultAdapter();
-        new MainActivity.ConnectBT().execute();
-        if ( myBluetooth==null ) {
-            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
-            finish();
-        }
-        else if ( !myBluetooth.isEnabled() ) {
-            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnBTon, 1);
-        }
+//        requestBlePermissions(this,1);
+//        myBluetooth = BluetoothAdapter.getDefaultAdapter();
+//        new MainActivity.ConnectBT().execute();
+//        if ( myBluetooth==null ) {
+//            Toast.makeText(getApplicationContext(), "Bluetooth device not available", Toast.LENGTH_LONG).show();
+//            finish();
+//        }
+//        else if ( !myBluetooth.isEnabled() ) {
+//            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(turnBTon, 1);
+//        }
 
     }
     // Zone for T2S and S2T
@@ -355,9 +355,7 @@ public class MainActivity extends AppCompatActivity {
                         String link = data.getData().getPath();
                         ReadPDF readPDF = new ReadPDF();
                         listData = readPDF.Read_From_Storage(link);
-                        for(String txt:listData){
-                            before_go_signal(txt);
-                        }
+                        say(0 , listData);
                         if (Environment.isExternalStorageManager()){
                         }else {
                             Intent intent = new Intent();
@@ -664,12 +662,12 @@ public class MainActivity extends AppCompatActivity {
                     Speech.getInstance().say("Mình không hiểu ý bạn");
                     break;
                 case 1:
-                    Speech.getInstance().say("Đã rõ");
-                    sendSignal(change_speed(true));
+                    //Speech.getInstance().say("Đã rõ");
+                    //sendSignal(change_speed(true));
                     break;
                 case 2:
-                    Speech.getInstance().say("Đã rõ");
-                    sendSignal(change_speed(false));
+                    //Speech.getInstance().say("Đã rõ");
+                    //sendSignal(change_speed(false));
                     break;
                 case 3:
                     Speech.getInstance().say("Đã rõ");
@@ -679,9 +677,7 @@ public class MainActivity extends AppCompatActivity {
                         ReadPostFromNewsPaper read = new ReadPostFromNewsPaper(tmp.get(vitri).url);
                         List<String> list2 = new ArrayList<String>();
                         list2 = read.execute().get();
-                        for(String hi:list2){
-                            before_go_signal(hi);
-                        }
+                        say(0,list2);
                     }
                     break;
                 case 4:
@@ -703,33 +699,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    public int setbit(int msk,int i) {
-        return (msk | (1 << (i-1)));
-    }
-
-    public String convert_to_braille(String txt){
-        String ans = "";
-        Translate t = new Translate();
-        String tmp = t.translate(this , txt);
-        int res = 0;
-        for(int i=0;i<tmp.length();i++){
-            if(tmp.charAt(i)!='-' && tmp.charAt(i)!=' '){
-                res = setbit(res , 7 - (tmp.charAt(i) -'0'));
-            } else{
-                ans = ans + (char)(res + '0');
-                res = 0;
+    void say(int i , List<String> data){
+        if(i>=data.size()) return;
+        Speech.getInstance().say(data.get(i), new TextToSpeechCallback() {
+            @Override
+            public void onStart() {
             }
-        }
-        if(res != 0 ) ans = ans + (char)(res + '0');
-        return ans;
-    }
-    void before_go_signal(String txt){
-        String res = convert_to_braille(txt);
-        sendSignal(res);
-        try{
-            Thread.sleep(res.length()*100);
-        }catch (Exception e){
-            e.toString();
-        }
+
+            @Override
+            public void onCompleted() {
+                say(i+1,data);
+            }
+
+            @Override
+            public void onError() {
+                Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
