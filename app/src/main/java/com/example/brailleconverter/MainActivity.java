@@ -664,12 +664,15 @@ public class MainActivity extends AppCompatActivity {
                     Speech.getInstance().say("Mình không hiểu ý bạn");
                     break;
                 case 1:
+                    Speech.getInstance().say("Đã rõ");
                     sendSignal(change_speed(true));
                     break;
                 case 2:
+                    Speech.getInstance().say("Đã rõ");
                     sendSignal(change_speed(false));
                     break;
                 case 3:
+                    Speech.getInstance().say("Đã rõ");
                     vitri = 0;
                     Read_newspaper();
                     if(vitri!=0){
@@ -682,6 +685,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     break;
                 case 4:
+                    Speech.getInstance().say("Đã rõ");
                     openFile();
                     break;
                 case 5:
@@ -699,6 +703,33 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+    public int setbit(int msk,int i) {
+        return (msk | (1 << (i-1)));
+    }
+
+    public String convert_to_braille(String txt){
+        String ans = "";
+        Translate t = new Translate();
+        String tmp = t.translate(this , txt);
+        int res = 0;
+        for(int i=0;i<tmp.length();i++){
+            if(tmp.charAt(i)!='-' && tmp.charAt(i)!=' '){
+                res = setbit(res , 7 - (tmp.charAt(i) -'0'));
+            } else{
+                ans = ans + (char)(res + '0');
+                res = 0;
+            }
+        }
+        if(res != 0 ) ans = ans + (char)(res + '0');
+        return ans;
+    }
     void before_go_signal(String txt){
+        String res = convert_to_braille(txt);
+        sendSignal(res);
+        try{
+            Thread.sleep(res.length()*100);
+        }catch (Exception e){
+            e.toString();
+        }
     }
 }
