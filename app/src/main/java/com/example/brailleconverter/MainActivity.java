@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     BluetoothSocket btSocket = null;
     private boolean isBtConnected = false;
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    List<Post> tmp = new ArrayList<Post>();
     // End ZONE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,12 +94,12 @@ public class MainActivity extends AppCompatActivity {
         videoview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                analyst_querry("ĐỌC BÁO");
+                Touch_Screen();
             }
         });
         Speech.init(this, getPackageName(), mTttsInitListener);
         copyAssets();
-
+        Read_newspaper_tts();
 //        requestBlePermissions(this,1);
 //        myBluetooth = BluetoothAdapter.getDefaultAdapter();
 //        new MainActivity.ConnectBT().execute();
@@ -352,9 +353,11 @@ public class MainActivity extends AppCompatActivity {
                         Intent data = result.getData();
                         Uri uri = data.getData();
                         String link = data.getData().getPath();
-                        Log.d("AAAAAAAA" , link);
                         ReadPDF readPDF = new ReadPDF();
-                        readPDF.Read_From_Storage(link);
+                        listData = readPDF.Read_From_Storage(link);
+                        for(String txt:listData){
+                            before_go_signal(txt);
+                        }
                         if (Environment.isExternalStorageManager()){
                         }else {
                             Intent intent = new Intent();
@@ -366,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
-    public void openFile(View view){
+    public void openFile(){
         Intent chooseFile = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         //chooseFile.setType("application/pdf");
         chooseFile.setType("*/*");
@@ -545,13 +548,7 @@ public class MainActivity extends AppCompatActivity {
         });
         return Integer.toString(Speed);
     }
-    public void Read_newspaper_tts(List<Post> tmp){
-
-    }
-    public void Read_newspaper(){
-        ok = false;
-        isClickPost = false;
-        List<Post> tmp = new ArrayList<Post>();
+    public void Read_newspaper_tts(){
         try{
             Newspaper newspaper = new Newspaper();
             tmp = newspaper.execute().get();
@@ -562,7 +559,11 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e){
             e.toString();
         }
-        count = 0;
+    }
+    public int Read_newspaper(){
+        ok = false;
+        isClickPost = false;
+
         for(Post i : tmp){
             Speech.getInstance().say(i.title, new TextToSpeechCallback() {
                 @Override
@@ -626,20 +627,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 try {
                                     Matching_Number matching_number = new Matching_Number();
-                                    int num = matching_number.Matching(result);
-                                    if(num!=0){
-                                        listData.clear();
-                                        ReadPostFromNewsPaper readPostFromNewsPaper = new ReadPostFromNewsPaper(hoan.get(num).url);
-                                        try{
-                                            listData = readPostFromNewsPaper.execute().get();
-                                            int t = 100;
-                                            Log.i("ioioio" , listData.get(1));
-                                        } catch (InterruptedException e) {
-                                            e.printStackTrace();
-                                        } catch (ExecutionException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
+                                    vitri  = matching_number.Matching(result);
                                 } catch (Exception e){
                                     Log.e("Er" , e.toString());
                                 }
@@ -663,6 +651,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e){
             e.toString();
         }
+        return -1;
     }
     public void analyst_querry(String s){
         try{
@@ -672,6 +661,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e("num" , Integer.toString(num));
             switch (num){
                 case 0:
+                    Speech.getInstance().say("Mình không hiểu ý bạn");
                     break;
                 case 1:
                     sendSignal(change_speed(true));
@@ -680,10 +670,19 @@ public class MainActivity extends AppCompatActivity {
                     sendSignal(change_speed(false));
                     break;
                 case 3:
+                    vitri = 0;
                     Read_newspaper();
+                    if(vitri!=0){
+                        ReadPostFromNewsPaper read = new ReadPostFromNewsPaper(tmp.get(vitri).url);
+                        List<String> list2 = new ArrayList<String>();
+                        list2 = read.execute().get();
+                        for(String hi:list2){
+                            before_go_signal(hi);
+                        }
+                    }
                     break;
                 case 4:
-                    ReadPDF read = new ReadPDF();
+                    openFile();
                     break;
                 case 5:
                     break;
@@ -692,6 +691,7 @@ public class MainActivity extends AppCompatActivity {
                 case 7:
                     break;
                 default:
+                    Speech.getInstance().say("Mình không hiểu ý bạn");
                     break;
             }
         } catch (Exception e){
@@ -699,8 +699,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    void before_go_signal(){
-        for(String t:listData){
-        }
+    void before_go_signal(String txt){
     }
 }

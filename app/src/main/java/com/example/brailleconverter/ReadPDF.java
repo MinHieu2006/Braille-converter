@@ -40,6 +40,7 @@ public class ReadPDF extends AppCompatActivity {
             for (int i = 0; i < 1; i++) {
                 //extractedText = extractedText + PdfTextExtractor.getTextFromPage(reader, i + 1).trim() + "\n";
                 list.add(PdfTextExtractor.getTextFromPage(reader, i + 1).trim());
+                Log.i("text" , PdfTextExtractor.getTextFromPage(reader, i + 1).trim());
             }
             Log.d("EEE" , extractedText);
             reader.close();
