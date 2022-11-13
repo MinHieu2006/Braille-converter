@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         Speech.init(this, getPackageName(), mTttsInitListener);
+        int t = 12;
         copyAssets();
         Read_newspaper_tts();
 //        requestBlePermissions(this,1);
