@@ -61,6 +61,7 @@ import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
     // Zone for variable
+    int selected = -1;
     int count = 0;
     boolean ok = false;
     public List<String> listData = new ArrayList<String>();
@@ -82,21 +83,18 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBtConnected = false;
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     List<Post> tmp = new ArrayList<Post>();
+    VideoView videoview;
+    Touch_screen touch_screen = new Touch_screen();
     // End ZONE
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        VideoView videoview = (VideoView) findViewById(R.id.videoView);
+        videoview = (VideoView) findViewById(R.id.videoView);
         Uri uri = Uri.parse("android.resource://"+getPackageName()+"/"+R.raw.video_background);
         videoview.setVideoURI(uri);
         videoview.start();
-        videoview.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Touch_Screen();
-            }
-        });
+
         Speech.init(this, getPackageName(), mTttsInitListener);
         copyAssets();
         Read_newspaper_tts();
@@ -111,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 //            Intent turnBTon = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 //            startActivityForResult(turnBTon, 1);
 //        }
-
+        touch_screen.start();
     }
     // Zone for T2S and S2T
     private TextToSpeech.OnInitListener mTttsInitListener = new TextToSpeech.OnInitListener() {
@@ -276,72 +274,7 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
     // END Zone for T2S and S2T
-    public void Touch_Screen(){
-        if(trang_thai == 0){
-            if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
-            if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
-            Speech.getInstance().say("đang lắng nghe", new TextToSpeechCallback() {
-                @Override
-                public void onStart() {
-                }
 
-                @Override
-                public void onCompleted() {
-                    try {
-                        // you must have android.permission.RECORD_AUDIO granted at this point
-                        Speech.getInstance().startListening(new SpeechDelegate() {
-                            @Override
-                            public void onStartOfSpeech() {
-                                Log.i("speech", "speech recognition is now active");
-                            }
-
-                            @Override
-                            public void onSpeechRmsChanged(float value) {
-                                //Log.d("speech", "rms is now: " + value);
-                            }
-
-                            @Override
-                            public void onSpeechPartialResults(List<String> results) {
-                                StringBuilder str = new StringBuilder();
-                                for (String res : results) {
-                                    str.append(res).append(" ");
-                                }
-
-                                Log.i("speech", "partial result: " + str.toString().trim());
-                            }
-
-                            @Override
-                            public void onSpeechResult(String result) {
-                                Log.i("speech", "result: " + result);
-
-                                try {
-                                    analyst_querry(result);
-                                } catch (Exception e){
-                                    Log.e("Er" , e.toString());
-                                }
-
-
-                            }
-                        });
-
-                    } catch (SpeechRecognitionNotAvailable exc) {
-                        Log.e("speech", "Speech recognition is not available on this device!");
-                    } catch (GoogleVoiceTypingDisabledException exc) {
-                        showEnableGoogleVoiceTyping();
-                    }
-                }
-
-                @Override
-                public void onError() {
-                    Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-        else if(trang_thai == 2){
-            isClickPost = true;
-        }
-
-    }
 
     ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -558,19 +491,21 @@ public class MainActivity extends AppCompatActivity {
             e.toString();
         }
     }
-    public int Read_newspaper(){
-        ok = false;
-        isClickPost = false;
-
-        for(Post i : tmp){
-            Speech.getInstance().say(i.title, new TextToSpeechCallback() {
+    public void Read_newspaper(int i){
+        if(i>=tmp.size()) return;
+        if(trang_thai >= 2){
+            selected = i-1;
+            funtion();
+            return;
+        }
+            Speech.getInstance().say(tmp.get(i).title, new TextToSpeechCallback() {
                 @Override
                 public void onStart() {
                 }
 
                 @Override
                 public void onCompleted() {
-
+                    Read_newspaper(i+1);
                 }
 
                 @Override
@@ -578,78 +513,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
                 }
             });
-            try{
-                Thread.sleep(10000);
-            }catch (Exception e){
-                e.toString();
-            }
-        }
 
-        try{
-            List<Post> hoan = tmp;
-            if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
-            if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
-            Speech.getInstance().say("Bạn muốn đọc bài báo nào", new TextToSpeechCallback() {
-                @Override
-                public void onStart() {
-                }
-
-                @Override
-                public void onCompleted() {
-                    try {
-                        // you must have android.permission.RECORD_AUDIO granted at this point
-                        Speech.getInstance().startListening(new SpeechDelegate() {
-                            @Override
-                            public void onStartOfSpeech() {
-                                Log.i("speech", "speech recognition is now active");
-                            }
-
-                            @Override
-                            public void onSpeechRmsChanged(float value) {
-                                //Log.d("speech", "rms is now: " + value);
-                            }
-
-                            @Override
-                            public void onSpeechPartialResults(List<String> results) {
-                                StringBuilder str = new StringBuilder();
-                                for (String res : results) {
-                                    str.append(res).append(" ");
-                                }
-
-                                Log.i("speech", "partial result: " + str.toString().trim());
-                            }
-
-                            @Override
-                            public void onSpeechResult(String result) {
-                                Log.i("speech", "result: " + result);
-
-                                try {
-                                    Matching_Number matching_number = new Matching_Number();
-                                    vitri  = matching_number.Matching(result);
-                                } catch (Exception e){
-                                    Log.e("Er" , e.toString());
-                                }
-
-
-                            }
-                        });
-
-                    } catch (SpeechRecognitionNotAvailable exc) {
-                        Log.e("speech", "Speech recognition is not available on this device!");
-                    } catch (GoogleVoiceTypingDisabledException exc) {
-                        showEnableGoogleVoiceTyping();
-                    }
-                }
-
-                @Override
-                public void onError() {
-                    Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
-                }
-            });
-        } catch (Exception e){
-            e.toString();
-        }
-        return -1;
     }
     public void analyst_querry(String s){
         try{
@@ -671,14 +535,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 3:
                     Speech.getInstance().say("Đã rõ");
-                    vitri = 0;
-                    Read_newspaper();
-                    if(vitri!=0){
-                        ReadPostFromNewsPaper read = new ReadPostFromNewsPaper(tmp.get(vitri).url);
-                        List<String> list2 = new ArrayList<String>();
-                        list2 = read.execute().get();
-                        say(0,list2);
-                    }
+                    selected = -1;
+                    Read_newspaper(0);
+                    funtion();
                     break;
                 case 4:
                     Speech.getInstance().say("Đã rõ");
@@ -716,5 +575,94 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+    public class Touch_screen extends Thread{
+        @Override
+        public void run(){
+            videoview.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                        trang_thai++;
+                        if(trang_thai == 1){
+                            if(Speech.getInstance().isSpeaking()) Speech.getInstance().stopTextToSpeech();
+                            if(Speech.getInstance().isListening()) Speech.getInstance().stopListening();
+                            Speech.getInstance().say("đang lắng nghe", new TextToSpeechCallback() {
+                                @Override
+                                public void onStart() {
+                                }
+
+                                @Override
+                                public void onCompleted() {
+                                    try {
+                                        // you must have android.permission.RECORD_AUDIO granted at this point
+                                        Speech.getInstance().startListening(new SpeechDelegate() {
+                                            @Override
+                                            public void onStartOfSpeech() {
+                                                Log.i("speech", "speech recognition is now active");
+                                            }
+
+                                            @Override
+                                            public void onSpeechRmsChanged(float value) {
+                                                //Log.d("speech", "rms is now: " + value);
+                                            }
+
+                                            @Override
+                                            public void onSpeechPartialResults(List<String> results) {
+                                                StringBuilder str = new StringBuilder();
+                                                for (String res : results) {
+                                                    str.append(res).append(" ");
+                                                }
+
+                                                Log.i("speech", "partial result: " + str.toString().trim());
+                                            }
+
+                                            @Override
+                                            public void onSpeechResult(String result) {
+                                                Log.i("speech", "result: " + result);
+
+                                                try {
+                                                    analyst_querry(result);
+                                                } catch (Exception e){
+                                                    Log.e("Er" , e.toString());
+                                                }
+
+
+                                            }
+                                        });
+
+                                    } catch (SpeechRecognitionNotAvailable exc) {
+                                        Log.e("speech", "Speech recognition is not available on this device!");
+                                    } catch (GoogleVoiceTypingDisabledException exc) {
+                                        showEnableGoogleVoiceTyping();
+                                    }
+                                }
+
+                                @Override
+                                public void onError() {
+                                    Toast.makeText(MainActivity.this, "TTS onError", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                        else if(trang_thai >=2){
+                            isClickPost = true;
+                        }
+
+                }
+            });
+
+        }
+    }
+    void funtion(){
+        if(selected !=-1){
+            try {
+
+                ReadPostFromNewsPaper read = new ReadPostFromNewsPaper(tmp.get(selected).url);
+                List<String> list2 = new ArrayList<String>();
+                list2 = read.execute().get();
+                say(0,list2);
+            }catch (Exception e){
+
+            }
+        }
     }
 }
